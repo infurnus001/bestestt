@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Late Night Best Talk Ever Had</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #000;
+    --header-bg: #000;
+    --you-bubble: linear-gradient(135deg, #9b59b6, #e040fb, #c0397a);
+    --them-bubble: #262626;
+    --you-text: #fff;
+    --them-text: #f5f5f5;
+    --timestamp: #555;
+    --header-text: #fff;
+    --sub-text: #a8a8a8;
+    --border: #262626;
+    --online: #22c55e;
+    --input-bg: #1a1a1a;
+    --icon-color: #fff;
+  }
+
+  body {
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--header-bg);
+    padding: 10px 16px 10px 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .back-btn {
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 4px 6px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  /* Instagram story ring */
+  .avatar-ring {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid #000;
+    overflow: hidden;
+    display: block;
+  }
+
+  .avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .online-dot {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 11px;
+    height: 11px;
+    background: var(--online);
+    border-radius: 50%;
+    border: 2px solid #000;
+  }
+
+  .header-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .header-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--header-text);
+    line-height: 1.2;
+  }
+  .header-status {
+    font-size: 12px;
+    color: var(--sub-text);
+    margin-top: 1px;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+
+  /* Phone SVG icon */
+  .header-actions svg {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: #fff;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    cursor: pointer;
+  }
+
+  /* ── MESSAGES ── */
+  .messages-container {
+    flex: 1;
+    padding: 8px 12px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  /* Date separator */
+  .date-sep {
+    text-align: center;
+    margin: 16px 0 10px;
+  }
+  .date-sep span {
+    font-size: 12px;
+    color: var(--sub-text);
+    font-weight: 400;
+  }
+
+  .msg-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    max-width: 100%;
+    opacity: 0;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .msg-row.you  { transform: translateX(22px); }
+  .msg-row.them { transform: translateX(-22px); }
+  .msg-row.visible {
+    opacity: 1 !important;
+    transform: translateX(0) !important;
+  }
+
+  .msg-row.them { justify-content: flex-start; padding-right: 60px; }
+  .msg-row.you  { justify-content: flex-end;  padding-left: 60px; }
+
+  .small-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    margin-bottom: 2px;
+  }
+  .small-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .small-avatar.hidden { visibility: hidden; }
+
+  .bubble-wrap {
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+  }
+  .msg-row.you .bubble-wrap { align-items: flex-end; }
+  .msg-row.them .bubble-wrap { align-items: flex-start; }
+
+  /* Instagram bubble style */
+  .bubble {
+    padding: 10px 14px;
+    border-radius: 22px;
+    font-size: 14.5px;
+    line-height: 1.45;
+    word-break: break-word;
+    max-width: 100%;
+  }
+
+  .msg-row.you .bubble {
+    background: linear-gradient(135deg, #9b59b6, #e040fb 60%, #c0397a);
+    color: #fff;
+    border-bottom-right-radius: 5px;
+  }
+
+  .msg-row.them .bubble {
+    background: var(--them-bubble);
+    color: var(--them-text);
+    border-bottom-left-radius: 5px;
+    border: 1px solid #333;
+  }
+
+  /* Consecutive messages tighten radius */
+  .msg-row.you.continued .bubble {
+    border-bottom-right-radius: 22px;
+    border-top-right-radius: 5px;
+  }
+  .msg-row.them.continued .bubble {
+    border-bottom-left-radius: 22px;
+    border-top-left-radius: 5px;
+  }
+
+  /* ── INPUT BAR ── */
+  .input-bar {
+    padding: 10px 12px 28px;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+  }
+
+  .input-wrap {
+    flex: 1;
+    background: transparent;
+    border-radius: 22px;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    border: 1.5px solid #363636;
+    min-height: 42px;
+  }
+
+  .input-wrap input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-size: 14px;
+    padding: 8px 0;
+    font-family: inherit;
+  }
+
+  .input-wrap input::placeholder { color: #555; }
+
+  .input-icon {
+    color: #a8a8a8;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+  }
+
+  /* Right side icons outside input */
+  .bar-icon {
+    color: #fff;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .bar-icon svg {
+    width: 26px;
+    height: 26px;
+    fill: none;
+    stroke: #fff;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="back-btn">&#8249;</div>
+  <div class="avatar-wrap">
+    <div class="avatar-ring">
+      <div class="avatar">
+        <img src="data:image/png;base64,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" />
+      </div>
+    </div>
+    <div class="online-dot"></div>
+  </div>
+  <div class="header-info">
+    <div class="header-name">jordan</div>
+    <div class="header-status">krdot.exe</div>
+  </div>
+  <div class="header-actions">
+    <!-- Phone icon -->
+    <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.09 10.8 19.79 19.79 0 01.02 2.18 2 2 0 012 .02h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+    <!-- Video icon -->
+    <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+    <!-- Info icon -->
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8" stroke-width="2.5"/><line x1="12" y1="12" x2="12" y2="16"/></svg>
+  </div>
+</div>
+
+<!-- MESSAGES -->
+<div class="messages-container" id="msgs"></div>
+
+<!-- INPUT BAR -->
+<div class="input-bar">
+  <!-- Camera icon -->
+  <div class="bar-icon">
+    <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+  </div>
+  <div class="input-wrap">
+    <input type="text" placeholder="Message…" id="inputField" />
+    <span class="input-icon">🎤</span>
+    <span class="input-icon" style="font-size:17px;">😊</span>
+  </div>
+  <!-- Mic / sticker icons -->
+  <div class="bar-icon">
+    <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 013 3v6a3 3 0 01-6 0V5a3 3 0 013-3z"/><path d="M19 10a7 7 0 01-14 0"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+  </div>
+  <div class="bar-icon">
+    <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+  </div>
+</div>
+
+<script>
+const rawMessages = [
+  { sender: "HUNAR", text: "Stress hora yr bhot aap dur kro", time: "9:28 AM" },
+  { sender: "jordan", text: "haan haan jaan koi ni", time: "9:28 AM" },
+  { sender: "jordan", text: "hmmmm toh", time: "9:28 AM" },
+  { sender: "HUNAR", text: "Aaj moka hai", time: "9:28 AM" },
+  { sender: "HUNAR", text: "Apke pass", time: "9:28 AM" },
+  { sender: "jordan", text: "mujhe naaaa", time: "9:28 AM" },
+  { sender: "HUNAR", text: "Potty", time: "9:28 AM" },
+  { sender: "jordan", text: "hahahaaha", time: "9:28 AM" },
+  { sender: "HUNAR", text: "Ik", time: "9:28 AM" },
+  { sender: "jordan", text: "soooo predictable no", time: "9:29 AM" },
+  { sender: "HUNAR", text: "Fattu", time: "9:29 AM" },
+  { sender: "HUNAR", text: "Huhhh", time: "9:29 AM" },
+  { sender: "HUNAR", text: "Chodo", time: "9:29 AM" },
+  { sender: "jordan", text: "Good morning everyone, my name is Kushagra and I'll be reciting today's thought of the day today. Thought of the day is honesty is the best policy. I repeat my thought. Honesty is the best policy. Thank you and have a", time: "9:29 AM" },
+  { sender: "jordan", text: "speech to text kiya hehhee", time: "9:29 AM" },
+  { sender: "HUNAR", text: "😑😑", time: "9:29 AM" },
+  { sender: "jordan", text: "naah ajj to aoo app", time: "9:29 AM" },
+  { sender: "HUNAR", text: "Koi ni yrr", time: "9:30 AM" },
+  { sender: "jordan", text: "not ajj chodo", time: "9:30 AM" },
+  { sender: "HUNAR", text: "Yeahhhhh my boii", time: "9:30 AM" },
+  { sender: "HUNAR", text: "Susu kr au ek min", time: "9:30 AM" },
+  { sender: "HUNAR", text: "Ignite kro aap", time: "9:30 AM" },
+  { sender: "jordan", text: "okeiieiee", time: "9:30 AM" },
+  { sender: "jordan", text: "chalo", time: "9:31 AM" },
+  { sender: "HUNAR", text: "Come on", time: "9:32 AM" },
+  { sender: "jordan", text: "if i was there with you right now what would happen", time: "9:32 AM" },
+  { sender: "HUNAR", text: "You tell me no", time: "9:32 AM" },
+  { sender: "jordan", text: "what i initiated", time: "9:32 AM" },
+  { sender: "jordan", text: "depends on your response now", time: "9:32 AM" },
+  { sender: "HUNAR", text: "I'll join you", time: "9:32 AM" },
+  { sender: "HUNAR", text: "You start", time: "9:32 AM" },
+  { sender: "HUNAR", text: "Nanannanana", time: "9:32 AM" },
+  { sender: "jordan", text: "what nanananana", time: "9:32 AM" },
+  { sender: "HUNAR", text: "You have to give a kick start", time: "9:33 AM" },
+  { sender: "jordan", text: "i started it you keep it alive", time: "9:33 AM" },
+  { sender: "jordan", text: "i gave it no", time: "9:33 AM" },
+  { sender: "HUNAR", text: "No", time: "9:33 AM" },
+  { sender: "jordan", text: "what no darlo 😭😭", time: "9:33 AM" },
+  { sender: "HUNAR", text: "That was a fuski bomb", time: "9:33 AM" },
+  { sender: "jordan", text: "ahhaann is it", time: "9:33 AM" },
+  { sender: "HUNAR", text: "Yesss", time: "9:33 AM" },
+  { sender: "jordan", text: "well someone is on periods", time: "9:33 AM" },
+  { sender: "jordan", text: "never mind", time: "9:33 AM" },
+  { sender: "jordan", text: "hehhee", time: "9:34 AM" },
+  { sender: "HUNAR", text: "☺️☺️", time: "9:34 AM" },
+  { sender: "HUNAR", text: "Thanks", time: "9:34 AM" },
+  { sender: "jordan", text: "thanks", time: "9:34 AM" },
+  { sender: "jordan", text: "whatttt", time: "9:34 AM" },
+  { sender: "jordan", text: "dry", time: "9:34 AM" },
+  { sender: "jordan", text: "reply", time: "9:34 AM" },
+  { sender: "jordan", text: "fucking", time: "9:34 AM" },
+  { sender: "HUNAR", text: "I thought you are saying I'll start", time: "9:34 AM" },
+  { sender: "HUNAR", text: "Someone is on periods so", time: "9:34 AM" },
+  { sender: "jordan", text: "but i said it no", time: "9:35 AM" },
+  { sender: "HUNAR", text: "Nooo", time: "9:35 AM" },
+  { sender: "jordan", text: "nevermind", time: "9:35 AM" },
+  { sender: "HUNAR", text: "Now start", time: "9:35 AM" },
+  { sender: "jordan", text: "yes toh starting with this only", time: "9:35 AM" },
+  { sender: "jordan", text: "if i was there with you right now what would happen", time: "9:35 AM" },
+  { sender: "HUNAR", text: "A sexy makeout for sure", time: "9:36 AM" },
+  { sender: "HUNAR", text: "But someone is on periods", time: "9:36 AM" },
+  { sender: "HUNAR", text: "Nwm", time: "9:36 AM" },
+  { sender: "jordan", text: "and maybe not on the bed", time: "9:36 AM" },
+  { sender: "HUNAR", text: "Then where", time: "9:36 AM" },
+  { sender: "jordan", text: "ahhhhh dont no break the pace", time: "9:36 AM" },
+  { sender: "HUNAR", text: "Sorry", time: "9:36 AM" },
+  { sender: "HUNAR", text: "Okiee", time: "9:36 AM" },
+  { sender: "HUNAR", text: "Hn to where", time: "9:36 AM" },
+  { sender: "jordan", text: "maybe we'll start from kitchen slab what you think", time: "9:37 AM" },
+  { sender: "HUNAR", text: "Great start", time: "9:37 AM" },
+  { sender: "HUNAR", text: "What will you start with", time: "9:37 AM" },
+  { sender: "HUNAR", text: "Making me sit on the slab and….", time: "9:37 AM" },
+  { sender: "jordan", text: "you sitting on the slab for sure", time: "9:37 AM" },
+  { sender: "HUNAR", text: "Anddd", time: "9:38 AM" },
+  { sender: "jordan", text: "and maybe we are having something to eat like noodle probably", time: "9:39 AM" },
+  { sender: "HUNAR", text: "Okaaiiieee", time: "9:39 AM" },
+  { sender: "HUNAR", text: "And then one end of noodle in your mouth one in mine", time: "9:39 AM" },
+  { sender: "jordan", text: "anddddd ofc not focusing on the restof the noodles we will eat it end to end", time: "9:40 AM" },
+  { sender: "jordan", text: "smatryyy", time: "9:40 AM" },
+  { sender: "HUNAR", text: "I would like to jump on dessert", time: "9:40 AM" },
+  { sender: "jordan", text: "why not hope thats not the actual desert you talking about", time: "9:41 AM" },
+  { sender: "HUNAR", text: "Some ice cream and hot chocolate", time: "9:41 AM" },
+  { sender: "HUNAR", text: "Ahaaannnn", time: "9:41 AM" },
+  { sender: "HUNAR", text: "We can hope for sure", time: "9:41 AM" },
+  { sender: "jordan", text: "ahhaan better maybe we can have icecream in a better way", time: "9:41 AM" },
+  { sender: "jordan", text: "not without the spoons maybe", time: "9:41 AM" },
+  { sender: "jordan", text: "on someones neck", time: "9:41 AM" },
+  { sender: "HUNAR", text: "But i don't have bowl to put in ofoooi", time: "9:42 AM" },
+  { sender: "HUNAR", text: "Exactly", time: "9:42 AM" },
+  { sender: "HUNAR", text: "Maybe all over your body", time: "9:42 AM" },
+  { sender: "jordan", text: "who needs a bowl darlo you have already have them", time: "9:42 AM" },
+  { sender: "HUNAR", text: "Is it", time: "9:42 AM" },
+  { sender: "jordan", text: "yessss yess you do", time: "9:43 AM" },
+  { sender: "HUNAR", text: "Then after licking all the ice cream i mean eating", time: "9:43 AM" },
+  { sender: "jordan", text: "and eat icecream along with the two cherries", time: "9:43 AM" },
+  { sender: "HUNAR", text: "What would you like to do", time: "9:43 AM" },
+  { sender: "HUNAR", text: "Ahhhhhh okaiee", time: "9:44 AM" },
+  { sender: "jordan", text: "haaan maybe depends on the flavour on the icecream too", time: "9:44 AM" },
+  { sender: "jordan", text: "what would you like to have", time: "9:44 AM" },
+  { sender: "HUNAR", text: "Mmmmm i would love to have some lotus biscof", time: "9:45 AM" },
+  { sender: "jordan", text: "lotus biscofff that something new for the ice cream flavour", time: "9:45 AM" },
+  { sender: "HUNAR", text: "Ya i always have it", time: "9:46 AM" },
+  { sender: "jordan", text: "i thought you liked mango but never mind", time: "9:46 AM" },
+  { sender: "jordan", text: "😃", time: "9:46 AM" },
+  { sender: "HUNAR", text: "Of course i do", time: "9:46 AM" },
+  { sender: "HUNAR", text: "Kacha mango would be great", time: "9:47 AM" },
+  { sender: "HUNAR", text: "My bad", time: "9:47 AM" },
+  { sender: "jordan", text: "that doesnt sounds good tho", time: "9:47 AM" },
+  { sender: "jordan", text: "ofc", time: "9:47 AM" },
+  { sender: "HUNAR", text: "Koi bhi little khatti ice cream yk", time: "9:48 AM" },
+  { sender: "jordan", text: "haaan toh we were on the ice cream", time: "9:48 AM" },
+  { sender: "HUNAR", text: "Yk i like it", time: "9:48 AM" },
+  { sender: "jordan", text: "haan toh ice cream got eaten but our whole body is chip chip", time: "9:49 AM" },
+  { sender: "HUNAR", text: "Of course only you know", time: "9:49 AM" },
+  { sender: "jordan", text: "we have to take a bath", time: "9:49 AM" },
+  { sender: "HUNAR", text: "Ofoooi", time: "9:49 AM" },
+  { sender: "HUNAR", text: "Why not", time: "9:49 AM" },
+  { sender: "HUNAR", text: "Do we have a tub covered with bubbles", time: "9:49 AM" },
+  { sender: "jordan", text: "yes yes for the day for you darlo it is", time: "9:49 AM" },
+  { sender: "jordan", text: "so wee will take hot shower", time: "9:50 AM" },
+  { sender: "HUNAR", text: "And some wine along with the bath", time: "9:50 AM" },
+  { sender: "jordan", text: "gyser taking time to get the water hot", time: "9:50 AM" },
+  { sender: "jordan", text: "we have to wait", time: "9:50 AM" },
+  { sender: "jordan", text: "meanwhile we can rest over the sofas tooo", time: "9:50 AM" },
+  { sender: "HUNAR", text: "All steamy steam room", time: "9:50 AM" },
+  { sender: "HUNAR", text: "Could hear your loud breathing only", time: "9:50 AM" },
+  { sender: "jordan", text: "wine with some grapes tooo", time: "9:50 AM" },
+  { sender: "HUNAR", text: "Me making you eat with my hands", time: "9:51 AM" },
+  { sender: "jordan", text: "lovely", time: "9:51 AM" },
+  { sender: "jordan", text: "but the grapes are too sour", time: "9:52 AM" },
+  { sender: "jordan", text: "you have to compensate", time: "9:52 AM" },
+  { sender: "jordan", text: "be quick", time: "9:52 AM" },
+  { sender: "HUNAR", text: "Maybe a kiss can", time: "9:52 AM" },
+  { sender: "jordan", text: "a heavy sweet deep kiss might work", time: "9:52 AM" },
+  { sender: "HUNAR", text: "Or do you also need kacha mango", time: "9:53 AM" },
+  { sender: "jordan", text: "neeh only for you darlo", time: "9:53 AM" },
+  { sender: "HUNAR", text: "As you say sir", time: "9:53 AM" },
+  { sender: "jordan", text: "do you like any cosplay or something", time: "9:53 AM" },
+  { sender: "HUNAR", text: "Never thought about it", time: "9:54 AM" },
+  { sender: "jordan", text: "think it off", time: "9:54 AM" },
+  { sender: "HUNAR", text: "Not a proper cosplay but maybe recreating some movie scenes", time: "9:54 AM" },
+  { sender: "jordan", text: "like like likeeeee", time: "9:54 AM" },
+  { sender: "jordan", text: "how to i have to act my acting is phenomenal you know", time: "9:54 AM" },
+  { sender: "HUNAR", text: "Like in some parts of after and fifty shades of grey and 365 days", time: "9:55 AM" },
+  { sender: "HUNAR", text: "Of course ik", time: "9:55 AM" },
+  { sender: "HUNAR", text: "Some parts of my fault", time: "9:55 AM" },
+  { sender: "jordan", text: "ahhaannn we can indeed we can", time: "9:55 AM" },
+  { sender: "jordan", text: "heheeh fun", time: "9:56 AM" },
+  { sender: "HUNAR", text: "For sure", time: "9:56 AM" },
+  { sender: "jordan", text: "but the water get cold", time: "9:56 AM" },
+  { sender: "jordan", text: "not us tho", time: "9:56 AM" },
+  { sender: "HUNAR", text: "Just switch off the shower and turn something else on", time: "9:56 AM" },
+  { sender: "jordan", text: "turn on what", time: "9:57 AM" },
+  { sender: "HUNAR", text: "Maybe us", time: "9:57 AM" },
+  { sender: "jordan", text: "was about to say that", time: "9:57 AM" },
+  { sender: "HUNAR", text: "What should i do to turn you on madly", time: "9:58 AM" },
+  { sender: "jordan", text: "you just have to say yes is a seductive way", time: "9:58 AM" },
+  { sender: "jordan", text: "would be great", time: "9:58 AM" },
+  { sender: "HUNAR", text: "For sure", time: "9:58 AM" },
+  { sender: "jordan", text: "say it know", time: "9:59 AM" },
+  { sender: "HUNAR", text: "Yess baby", time: "9:59 AM" },
+  { sender: "jordan", text: "that was so so", time: "9:59 AM" },
+  { sender: "jordan", text: "not seductive maybe", time: "9:59 AM" },
+  { sender: "jordan", text: "try you can do beter", time: "9:59 AM" },
+  { sender: "HUNAR", text: "Ahhh yess babe keep going", time: "10:00 AM" },
+  { sender: "jordan", text: "betteruuuu", time: "10:00 AM" },
+  { sender: "HUNAR", text: "My pleasure", time: "10:00 AM" },
+  { sender: "jordan", text: "pleasure would be your darlo", time: "10:01 AM" },
+  { sender: "jordan", text: "maybe we should clean our self with the foam and bubbles before", time: "10:01 AM" },
+  { sender: "HUNAR", text: "Why not would you like to do the honours for me", time: "10:01 AM" },
+  { sender: "HUNAR", text: "Yours also", time: "10:02 AM" },
+  { sender: "jordan", text: "yess which flavour body wash would you like", time: "10:02 AM" },
+  { sender: "jordan", text: "or we keeping it raw", time: "10:02 AM" },
+  { sender: "jordan", text: "like just the normal soap", time: "10:02 AM" },
+  { sender: "HUNAR", text: "Maybe strawberries this time yk", time: "10:02 AM" },
+  { sender: "jordan", text: "strawberries are good", time: "10:02 AM" },
+  { sender: "HUNAR", text: "Yk the juicy ones", time: "10:03 AM" },
+  { sender: "jordan", text: "definitely the best one too", time: "10:03 AM" },
+  { sender: "HUNAR", text: "What would you do to turn me on", time: "10:04 AM" },
+  { sender: "jordan", text: "i will start with the foams with the strong fruits fragrance", time: "10:04 AM" },
+  { sender: "HUNAR", text: "Lovely", time: "10:04 AM" },
+  { sender: "HUNAR", text: "And….", time: "10:04 AM" },
+  { sender: "jordan", text: "maybe you are already turned on with never the less i know the points", time: "10:04 AM" },
+  { sender: "HUNAR", text: "Maybe this time i want more", time: "10:05 AM" },
+  { sender: "jordan", text: "the points above you hips bone below the waist", time: "10:05 AM" },
+  { sender: "jordan", text: "ahhaan what else you want more you owe my whole body", time: "10:06 AM" },
+  { sender: "jordan", text: "how much would it be enough", time: "10:06 AM" },
+  { sender: "HUNAR", text: "Maybe that's not enough", time: "10:06 AM" },
+  { sender: "HUNAR", text: "Maybe i want you to have all control of mine body too", time: "10:07 AM" },
+  { sender: "jordan", text: "okay then after the points will go to THE two points", time: "10:08 AM" },
+  { sender: "jordan", text: "where you lost all you control", time: "10:08 AM" },
+  { sender: "HUNAR", text: "What points are you talking", time: "10:08 AM" },
+  { sender: "jordan", text: "how many points do you have ig everyone has two so do you", time: "10:09 AM" },
+  { sender: "jordan", text: "the one close to you heart and another close to mine", time: "10:09 AM" },
+  { sender: "HUNAR", text: "Ahhhhh okiee", time: "10:09 AM" },
+  { sender: "jordan", text: "i wont hurt you", time: "10:10 AM" },
+  { sender: "jordan", text: "but i will do", time: "10:10 AM" },
+  { sender: "HUNAR", text: "And then", time: "10:10 AM" },
+  { sender: "HUNAR", text: "Ahmmmm like that", time: "10:10 AM" },
+  { sender: "jordan", text: "do i have all control now", time: "10:11 AM" },
+  { sender: "HUNAR", text: "Maybe i want you to tease me a little", time: "10:11 AM" },
+  { sender: "jordan", text: "do i have all the control now", time: "10:11 AM" },
+  { sender: "jordan", text: "maybe a little bite and my tongue might work", time: "10:12 AM" },
+  { sender: "jordan", text: "i think so i gained all the control of yours", time: "10:12 AM" },
+  { sender: "HUNAR", text: "While kissing my neck also moving your hand", time: "10:12 AM" },
+  { sender: "jordan", text: "did i ?", time: "10:12 AM" },
+  { sender: "HUNAR", text: "Yes you have", time: "10:13 AM" },
+  { sender: "jordan", text: "hands are all over the place darlo", time: "10:13 AM" },
+  { sender: "HUNAR", text: "Ohh my fuckin god", time: "10:13 AM" },
+  { sender: "jordan", text: "yayaya now maybe you can explain it better how you feel like", time: "10:14 AM" },
+  { sender: "HUNAR", text: "I will try to take on you now", time: "10:14 AM" },
+  { sender: "jordan", text: "yes why only water to spill from shower only", time: "10:15 AM" },
+  { sender: "HUNAR", text: "I feel like please don't stop keep going I'm all yours", time: "10:15 AM" },
+  { sender: "jordan", text: "as expected darling", time: "10:16 AM" },
+  { sender: "jordan", text: "will give you a tour of the paradise our paradise", time: "10:16 AM" },
+  { sender: "HUNAR", text: "I will tease you until you beg me to not stop", time: "10:16 AM" },
+  { sender: "jordan", text: "tease how", time: "10:16 AM" },
+  { sender: "HUNAR", text: "Maybe not moving my hands enough or ignoring it intentionally by just a little touch", time: "10:17 AM" },
+  { sender: "jordan", text: "ufff thats very teasey you know", time: "10:18 AM" },
+  { sender: "HUNAR", text: "Teasing you until you take my hand to show me direction", time: "10:19 AM" },
+  { sender: "jordan", text: "the directions are always i wanted to tell but never did", time: "10:19 AM" },
+  { sender: "jordan", text: "today will but", time: "10:19 AM" },
+  { sender: "HUNAR", text: "I want you to tell me", time: "10:19 AM" },
+  { sender: "HUNAR", text: "Until then enjoy yourself", time: "10:20 AM" },
+  { sender: "jordan", text: "okayyy guided you with the flow", time: "10:20 AM" },
+  { sender: "jordan", text: "the to and fro flow", time: "10:21 AM" },
+  { sender: "jordan", text: "and stopping you before ending everything you know taking everything soo slow", time: "10:21 AM" },
+  { sender: "jordan", text: "no hurry to end it before time", time: "10:21 AM" },
+  { sender: "HUNAR", text: "Sounds good and", time: "10:21 AM" },
+  { sender: "HUNAR", text: "And me not stopping it", time: "10:22 AM" },
+  { sender: "jordan", text: "neither i will with my hands", time: "10:22 AM" },
+  { sender: "HUNAR", text: "I won't stop until you lose all of yourself", time: "10:23 AM" },
+  { sender: "jordan", text: "my fingers are working meanwhile", time: "10:23 AM" },
+  { sender: "HUNAR", text: "Ahhhh alright", time: "10:23 AM" },
+  { sender: "jordan", text: "i guess its time to get off the tub", time: "10:24 AM" },
+  { sender: "jordan", text: "me drying you with the towel", time: "10:24 AM" },
+  { sender: "HUNAR", text: "Andd then", time: "10:24 AM" },
+  { sender: "jordan", text: "try to drying yet too wet", time: "10:25 AM" },
+  { sender: "HUNAR", text: "What can you do to make it worse", time: "10:25 AM" },
+  { sender: "jordan", text: "rubbing it all off untill you lose all yourself", time: "10:25 AM" },
+  { sender: "jordan", text: "not worse but more enjoyable maybe", time: "10:26 AM" },
+  { sender: "HUNAR", text: "I'll dry you up starting from your neck", time: "10:26 AM" },
+  { sender: "HUNAR", text: "Your chest going down", time: "10:26 AM" },
+  { sender: "jordan", text: "ahhaannn", time: "10:26 AM" },
+  { sender: "HUNAR", text: "Maybe have to bend down my knees", time: "10:26 AM" },
+  { sender: "HUNAR", text: "To dry all over", time: "10:27 AM" },
+  { sender: "HUNAR", text: "Or maybe wet", time: "10:27 AM" },
+  { sender: "jordan", text: "you have to tie you hairs too might distract you", time: "10:27 AM" },
+  { sender: "HUNAR", text: "I don't have a hair tie would need your hands", time: "10:27 AM" },
+  { sender: "jordan", text: "why not i will keep your hairs to make your view better", time: "10:28 AM" },
+  { sender: "HUNAR", text: "I would like to play a little with my big toy", time: "10:29 AM" },
+  { sender: "jordan", text: "ahahann still the strawberries on or off", time: "10:30 AM" },
+  { sender: "HUNAR", text: "Off maybe", time: "10:30 AM" },
+  { sender: "jordan", text: "better", time: "10:30 AM" },
+  { sender: "HUNAR", text: "Or both", time: "10:30 AM" },
+  { sender: "jordan", text: "if we are left with the ice cream too", time: "10:31 AM" },
+  { sender: "jordan", text: "maybe i can have it on", time: "10:31 AM" },
+  { sender: "HUNAR", text: "Why not would be cherry on top", time: "10:31 AM" },
+  { sender: "jordan", text: "not cherries this time", time: "10:31 AM" },
+  { sender: "HUNAR", text: "Of course", time: "10:32 AM" },
+  { sender: "jordan", text: "have to play with the queen now", time: "10:32 AM" },
+  { sender: "HUNAR", text: "It's already very wet", time: "10:32 AM" },
+  { sender: "jordan", text: "with some sweet and slightly salty natural flavours on", time: "10:33 AM" },
+  { sender: "jordan", text: "indeed more the juice more the healthier it is", time: "10:33 AM" },
+  { sender: "HUNAR", text: "Have to eat pineapple", time: "10:33 AM" },
+  { sender: "jordan", text: "mee too", time: "10:34 AM" },
+  { sender: "jordan", text: "but we do have some tabs for more intensely", time: "10:34 AM" },
+  { sender: "jordan", text: "if you wont mind", time: "10:34 AM" },
+  { sender: "HUNAR", text: "I would love to try it", time: "10:34 AM" },
+  { sender: "jordan", text: "lets have it with the dim lights and music that only we will remember off", time: "10:35 AM" },
+  { sender: "HUNAR", text: "Indeed", time: "10:35 AM" },
+  { sender: "HUNAR", text: "Getting a little nervous", time: "10:35 AM" },
+  { sender: "jordan", text: "you dont have too will be the best experience of ours", time: "10:36 AM" },
+  { sender: "HUNAR", text: "For sure", time: "10:36 AM" },
+  { sender: "jordan", text: "the first and the best", time: "10:36 AM" },
+  { sender: "HUNAR", text: "No doubts", time: "10:36 AM" },
+  { sender: "jordan", text: "off the blankets but a sheet below us", time: "10:37 AM" },
+  { sender: "jordan", text: "not too be messy you know", time: "10:37 AM" },
+  { sender: "HUNAR", text: "Exactly", time: "10:37 AM" },
+  { sender: "HUNAR", text: "Would i be able to handle it", time: "10:38 AM" },
+  { sender: "jordan", text: "start with the kisses initiating with slow motion", time: "10:38 AM" },
+  { sender: "jordan", text: "of course i'll gentle", time: "10:38 AM" },
+  { sender: "HUNAR", text: "Might not spoiling the mood", time: "10:38 AM" },
+  { sender: "jordan", text: "strawberries off or on", time: "10:38 AM" },
+  { sender: "HUNAR", text: "Obviously on", time: "10:39 AM" },
+  { sender: "HUNAR", text: "No second thoughts", time: "10:39 AM" },
+  { sender: "jordan", text: "mood is to be build darlo it will never be off tonight", time: "10:39 AM" },
+  { sender: "jordan", text: "if you like that ways", time: "10:40 AM" },
+  { sender: "HUNAR", text: "Ahhmmmm", time: "10:40 AM" },
+  { sender: "HUNAR", text: "No risks", time: "10:40 AM" },
+  { sender: "jordan", text: "first checking how much can you take it in", time: "10:40 AM" },
+  { sender: "HUNAR", text: "I'll be scared", time: "10:40 AM" },
+  { sender: "HUNAR", text: "Maybe we'll need something", time: "10:41 AM" },
+  { sender: "jordan", text: "intention to hurt but not to the full extend", time: "10:41 AM" },
+  { sender: "jordan", text: "atleast not in the starting", time: "10:41 AM" },
+  { sender: "jordan", text: "what would you like to", time: "10:41 AM" },
+  { sender: "HUNAR", text: "Anything that eases it", time: "10:42 AM" },
+  { sender: "jordan", text: "what's that darlo speak it up", time: "10:42 AM" },
+  { sender: "HUNAR", text: "I don't have any idea what would ease it", time: "10:43 AM" },
+  { sender: "jordan", text: "maybe my tongue will help", time: "10:43 AM" },
+  { sender: "HUNAR", text: "Ahm You think so", time: "10:43 AM" },
+  { sender: "jordan", text: "the lube you produce is more than sufficient ig", time: "10:44 AM" },
+  { sender: "HUNAR", text: "Whatever you say sir", time: "10:44 AM" },
+  { sender: "jordan", text: "external lube will affect the taste darlo", time: "10:44 AM" },
+  { sender: "HUNAR", text: "Indeed", time: "10:45 AM" },
+  { sender: "jordan", text: "i dont want that to affect the original juicy taste", time: "10:45 AM" },
+  { sender: "HUNAR", text: "As you wish", time: "10:45 AM" },
+  { sender: "jordan", text: "we both in motion me over you me having whole control of your body", time: "10:46 AM" },
+  { sender: "jordan", text: "you losing control on yourself", time: "10:46 AM" },
+  { sender: "HUNAR", text: "Me losing every inch of my bodu", time: "10:46 AM" },
+  { sender: "jordan", text: "starting with the missionary one which i always fantastise you in", time: "10:47 AM" },
+  { sender: "HUNAR", text: "Do you", time: "10:47 AM" },
+  { sender: "jordan", text: "we already had everything in my dreams beabu", time: "10:48 AM" },
+  { sender: "HUNAR", text: "Okiee moving forward", time: "10:48 AM" },
+  { sender: "jordan", text: "but today with the eyes opened not closed", time: "10:48 AM" },
+  { sender: "HUNAR", text: "Ahmmmm that's what you want", time: "10:49 AM" },
+  { sender: "jordan", text: "slowly things getting intense your screams getting more deeper", time: "10:49 AM" },
+  { sender: "HUNAR", text: "I see that coming", time: "10:50 AM" },
+  { sender: "jordan", text: "yes lets see the true self of our", time: "10:50 AM" },
+  { sender: "jordan", text: "just got stop before it nut faster", time: "10:51 AM" },
+  { sender: "jordan", text: "you still breathing too loud", time: "10:51 AM" },
+  { sender: "HUNAR", text: "For sure", time: "10:51 AM" },
+  { sender: "jordan", text: "sweet pain", time: "10:52 AM" },
+  { sender: "HUNAR", text: "Just in pain ig", time: "10:52 AM" },
+  { sender: "jordan", text: "not too much told you no i was gentle", time: "10:52 AM" },
+  { sender: "HUNAR", text: "Seeing the biggy toy won't be sweet hehehe", time: "10:53 AM" },
+  { sender: "jordan", text: "only half was inside you baby", time: "10:53 AM" },
+  { sender: "HUNAR", text: "In full too I'll be dead", time: "10:54 AM" },
+  { sender: "jordan", text: "i wont no than", time: "10:54 AM" },
+  { sender: "jordan", text: "i care about you", time: "10:54 AM" },
+  { sender: "HUNAR", text: "Awwwwww", time: "10:54 AM" },
+  { sender: "jordan", text: "i dont want our first to be hurting at all", time: "10:54 AM" },
+  { sender: "HUNAR", text: "🥹🥹", time: "10:55 AM" },
+  { sender: "jordan", text: "maybe now you over me", time: "10:55 AM" },
+  { sender: "HUNAR", text: "You making me move", time: "10:55 AM" },
+  { sender: "jordan", text: "will be grwat for both", time: "10:56 AM" },
+  { sender: "HUNAR", text: "Your breathing getting heavier", time: "10:56 AM" },
+  { sender: "jordan", text: "indeed they are getting", time: "10:57 AM" },
+  { sender: "HUNAR", text: "Would love to hear your sound", time: "10:57 AM" },
+  { sender: "jordan", text: "take it all baby come on", time: "10:58 AM" },
+  { sender: "HUNAR", text: "Make me please", time: "10:59 AM" },
+  { sender: "jordan", text: "ohhh thats too orgasmic", time: "10:59 AM" },
+  { sender: "HUNAR", text: "Are you feeling it right now", time: "10:59 AM" },
+  { sender: "jordan", text: "indeed it is", time: "11:00 AM" },
+  { sender: "jordan", text: "can experience it all", time: "11:00 AM" },
+  { sender: "HUNAR", text: "Ig your boy is awake or not", time: "11:01 AM" },
+  { sender: "jordan", text: "waken up darlo it hasnt brust once on the bed", time: "11:02 AM" },
+  { sender: "HUNAR", text: "Give it some love", time: "11:02 AM" },
+  { sender: "jordan", text: "got bursted in the tub last and the second one takes time to burst that means we can stay longer once it got burst", time: "11:03 AM" },
+  { sender: "jordan", text: "you can bless him more", time: "11:03 AM" },
+  { sender: "HUNAR", text: "How long we can stay", time: "11:04 AM" },
+  { sender: "jordan", text: "as long as you want", time: "11:04 AM" },
+  { sender: "HUNAR", text: "Surely", time: "11:04 AM" },
+  { sender: "jordan", text: "after 5 mint the boy will wake up again", time: "11:04 AM" },
+  { sender: "HUNAR", text: "Ahmmmm fast recovery", time: "11:05 AM" },
+  { sender: "jordan", text: "much needed it has to play whole night", time: "11:05 AM" },
+  { sender: "HUNAR", text: "Need some rest now", time: "11:06 AM" },
+  { sender: "HUNAR", text: "So dead", time: "11:06 AM" },
+  { sender: "jordan", text: "okayyy we can drink some water", time: "11:06 AM" },
+  { sender: "HUNAR", text: "Much needed", time: "11:06 AM" },
+  { sender: "jordan", text: "more rounds to go", time: "11:06 AM" },
+  { sender: "HUNAR", text: "Maybe out of stamina", time: "11:07 AM" },
+  { sender: "jordan", text: "atleast 2-3 rounds darlo", time: "11:07 AM" },
+  { sender: "jordan", text: "we haven't started it fully", time: "11:07 AM" },
+  { sender: "HUNAR", text: "If alive for sure", time: "11:08 AM" },
+  { sender: "jordan", text: "you have to ride it well", time: "11:08 AM" },
+  { sender: "jordan", text: "you forgot you ate tabs chocolate", time: "11:08 AM" },
+  { sender: "HUNAR", text: "I'll try my best", time: "11:08 AM" },
+  { sender: "HUNAR", text: "Ohhhhhh", time: "11:08 AM" },
+  { sender: "jordan", text: "you are at your best darling", time: "11:08 AM" },
+  { sender: "HUNAR", text: "You asking for more and more don't want to end this night", time: "11:09 AM" },
+  { sender: "jordan", text: "if you soo tired we can just end with we can have more seemless night like this", time: "11:10 AM" },
+  { sender: "HUNAR", text: "A good pampering cuddling sleep needed", time: "11:11 AM" },
+  { sender: "jordan", text: "that is a must to have", time: "11:11 AM" },
+  { sender: "HUNAR", text: "Lucky me", time: "11:11 AM" },
+  { sender: "jordan", text: "maybe tomorrow night", time: "11:11 AM" },
+  { sender: "jordan", text: "or the next", time: "11:11 AM" },
+  { sender: "HUNAR", text: "Have to do it in row to do it flawlessly", time: "11:12 AM" },
+  { sender: "jordan", text: "yes usually first time is not the best", time: "11:12 AM" },
+  { sender: "HUNAR", text: "Yaahh", time: "11:12 AM" },
+  { sender: "jordan", text: "but ours will be legendaryyyy", time: "11:12 AM" },
+  { sender: "HUNAR", text: "Hope so", time: "11:13 AM" },
+  { sender: "jordan", text: "however it will be we can have as many as we want", time: "11:13 AM" },
+  { sender: "HUNAR", text: "Trueeeee", time: "11:14 AM" },
+  { sender: "jordan", text: "now one gonna stop us", time: "11:14 AM" },
+  { sender: "HUNAR", text: "No one can", time: "11:14 AM" },
+  { sender: "jordan", text: "lemme clean it up", time: "11:14 AM" },
+  { sender: "jordan", text: "before we sleep", time: "11:14 AM" },
+  { sender: "HUNAR", text: "Pleaseeee", time: "11:14 AM" },
+  { sender: "HUNAR", text: "I can't move", time: "11:14 AM" },
+  { sender: "HUNAR", text: "Please pick me i can't walk", time: "11:15 AM" },
+  { sender: "jordan", text: "ohhnooo that means we have to take bath again", time: "11:15 AM" },
+  { sender: "jordan", text: "already in my arms", time: "11:15 AM" },
+  { sender: "jordan", text: "kissing your whole body", time: "11:15 AM" },
+  { sender: "HUNAR", text: "Thanku baby", time: "11:15 AM" },
+  { sender: "jordan", text: "might give hickeys on the secret places", time: "11:16 AM" },
+  { sender: "jordan", text: "would love to", time: "11:16 AM" },
+  { sender: "HUNAR", text: "Never got on inner thighs", time: "11:16 AM" },
+  { sender: "HUNAR", text: "Neither on waist", time: "11:17 AM" },
+  { sender: "jordan", text: "anddddd", time: "11:17 AM" },
+  { sender: "HUNAR", text: "Somewhere you would love", time: "11:17 AM" },
+  { sender: "HUNAR", text: "Maybe on my mole", time: "11:17 AM" },
+  { sender: "jordan", text: "i would love you bss it dont hurt you", time: "11:18 AM" },
+  { sender: "HUNAR", text: "It won't", time: "11:18 AM" },
+  { sender: "HUNAR", text: "Maybe on secret mole", time: "11:18 AM" },
+  { sender: "jordan", text: "ahhaan", time: "11:18 AM" },
+  { sender: "jordan", text: "never told me about that", time: "11:19 AM" },
+  { sender: "HUNAR", text: "Some surprises are good", time: "11:19 AM" },
+  { sender: "jordan", text: "on toh i saw a secret one on your left one", time: "11:19 AM" },
+  { sender: "HUNAR", text: "Wanna know", time: "11:19 AM" },
+  { sender: "jordan", text: "yess pleasee", time: "11:19 AM" },
+  { sender: "HUNAR", text: "Just in between them exact in centre", time: "11:20 AM" },
+  { sender: "jordan", text: "oh my fuking god never saw that", time: "11:20 AM" },
+  { sender: "HUNAR", text: "Aise you can't see it it's little deep", time: "11:21 AM" },
+  { sender: "jordan", text: "have to go a little then", time: "11:21 AM" },
+  { sender: "jordan", text: "i like deeper things", time: "11:21 AM" },
+  { sender: "HUNAR", text: "Little deeper", time: "11:21 AM" },
+  { sender: "HUNAR", text: "Ahmmmmm", time: "11:21 AM" },
+  { sender: "jordan", text: "sooo", time: "11:22 AM" },
+  { sender: "jordan", text: "yayayaya", time: "11:22 AM" },
+  { sender: "HUNAR", text: "Got one more secret one", time: "11:22 AM" },
+  { sender: "jordan", text: "i love secrets", time: "11:22 AM" },
+  { sender: "jordan", text: "but not for longer period", time: "11:23 AM" },
+  { sender: "HUNAR", text: "That i won't tell🤫", time: "11:23 AM" },
+  { sender: "jordan", text: "you have to today", time: "11:23 AM" },
+  { sender: "HUNAR", text: "Lets keep it secret na", time: "11:23 AM" },
+  { sender: "HUNAR", text: "You'll figure out someday", time: "11:23 AM" },
+  { sender: "jordan", text: "maybe a hint or something", time: "11:23 AM" },
+  { sender: "HUNAR", text: "Khudse", time: "11:23 AM" },
+  { sender: "jordan", text: "someday are too far maybe", time: "11:24 AM" },
+  { sender: "HUNAR", text: "Very deep down", time: "11:24 AM" },
+  { sender: "jordan", text: "ahhann", time: "11:24 AM" },
+  { sender: "HUNAR", text: "Right side", time: "11:24 AM" },
+  { sender: "HUNAR", text: "That's it", time: "11:24 AM" },
+  { sender: "jordan", text: "yes yess", time: "11:24 AM" },
+  { sender: "HUNAR", text: "No more hints", time: "11:24 AM" },
+  { sender: "jordan", text: "that's what", time: "11:24 AM" },
+  { sender: "jordan", text: "ahhhhh", time: "11:24 AM" },
+  { sender: "jordan", text: "😩😩😩😩", time: "11:25 AM" },
+  { sender: "HUNAR", text: "Itna to bnta h rkhna", time: "11:25 AM" },
+  { sender: "jordan", text: "chal lets keep it secret then", time: "11:25 AM" },
+  { sender: "jordan", text: "i will figure it our myself", time: "11:25 AM" },
+  { sender: "HUNAR", text: "Good", time: "11:25 AM" },
+  { sender: "HUNAR", text: "Yupieee", time: "11:25 AM" },
+  { sender: "jordan", text: "you might have to guide me", time: "11:26 AM" },
+  { sender: "HUNAR", text: "Surely", time: "11:26 AM" },
+  { sender: "jordan", text: "all were given by me anyhow", time: "11:26 AM" },
+  { sender: "HUNAR", text: "So in total i have 3 moles", time: "11:26 AM" },
+  { sender: "HUNAR", text: "And 4th very very light one on my dowside of left foot", time: "11:26 AM" },
+  { sender: "HUNAR", text: "🥰", time: "11:27 AM" },
+  { sender: "jordan", text: "i do have on my right foot", time: "11:27 AM" },
+  { sender: "HUNAR", text: "How many do you have", time: "11:27 AM" },
+  { sender: "jordan", text: "figured out only 2", time: "11:27 AM" },
+  { sender: "jordan", text: "never discovered more", time: "11:27 AM" },
+  { sender: "jordan", text: "right foot left arm on the elbow", time: "11:28 AM" },
+  { sender: "HUNAR", text: "Ohkiee", time: "11:28 AM" },
+  { sender: "jordan", text: "sooooo", time: "11:28 AM" },
+  { sender: "HUNAR", text: "Soooo", time: "11:28 AM" },
+  { sender: "HUNAR", text: "You tell", time: "11:28 AM" },
+  { sender: "jordan", text: "when", time: "11:28 AM" },
+  { sender: "jordan", text: "are we sleeping kal ke liye", time: "11:28 AM" },
+  { sender: "jordan", text: "hehehehe", time: "11:28 AM" },
+  { sender: "jordan", text: "gotcha", time: "11:28 AM" },
+  { sender: "HUNAR", text: "Teri ma ki", time: "11:29 AM" },
+  { sender: "jordan", text: "you got caught", time: "11:29 AM" },
+  { sender: "HUNAR", text: "Neeh", time: "11:29 AM" },
+  { sender: "jordan", text: "😈", time: "11:29 AM" },
+  { sender: "jordan", text: "you got", time: "11:29 AM" },
+  { sender: "HUNAR", text: "Noooo", time: "11:29 AM" },
+  { sender: "jordan", text: "you did ger", time: "11:29 AM" },
+  { sender: "HUNAR", text: "I was asking", time: "11:29 AM" },
+  { sender: "HUNAR", text: "Noooo", time: "11:29 AM" },
+  { sender: "jordan", text: "you did get", time: "11:29 AM" },
+  { sender: "HUNAR", text: "Blehhhh", time: "11:30 AM" },
+  { sender: "jordan", text: "hehehehe", time: "11:30 AM" },
+  { sender: "jordan", text: "backing it offf", time: "11:30 AM" },
+  { sender: "jordan", text: "ofccc sleepiuuu", time: "11:30 AM" },
+  { sender: "HUNAR", text: "Yayaya", time: "11:30 AM" },
+  { sender: "HUNAR", text: "Okiee", time: "11:30 AM" },
+  { sender: "jordan", text: "give me some time", time: "11:30 AM" },
+  { sender: "HUNAR", text: "Okiee", time: "11:30 AM" },
+  { sender: "jordan", text: "is your phone charged ?", time: "11:30 AM" },
+  { sender: "HUNAR", text: "No", time: "11:31 AM" },
+  { sender: "HUNAR", text: "Yessss", time: "11:31 AM" },
+  { sender: "HUNAR", text: "Kbki", time: "11:31 AM" },
+  { sender: "jordan", text: "charge it up", time: "11:31 AM" },
+  { sender: "jordan", text: "me coming 5 mints", time: "11:31 AM" },
+  { sender: "HUNAR", text: "Okiee", time: "11:31 AM" },
+  { sender: "HUNAR", text: "Lemme help", time: "11:31 AM" },
+  { sender: "HUNAR", text: "Okiee", time: "11:31 AM" },
+  { sender: "HUNAR", text: "Sleeping", time: "11:33 AM" },
+  { sender: "jordan", text: "help doing what", time: "11:33 AM" },
+  { sender: "jordan", text: "hmm hmm", time: "11:33 AM" },
+  { sender: "jordan", text: "lemee clean it", time: "11:33 AM" },
+  { sender: "HUNAR", text: "Sure", time: "11:33 AM" },
+  { sender: "jordan", text: "the room is very messy not", time: "11:33 AM" },
+  { sender: "HUNAR", text: "Okiee", time: "11:33 AM" },
+  { sender: "jordan", text: "the room is very messy no", time: "11:33 AM" },
+  { sender: "HUNAR", text: "Hogahi", time: "11:34 AM" },
+  { sender: "jordan", text: "cause of your band name", time: "11:34 AM" },
+  { sender: "jordan", text: "you made it", time: "11:34 AM" },
+  { sender: "jordan", text: "sarra samman idher udher kiya", time: "11:34 AM" },
+  { sender: "jordan", text: "uske chakkar mai", time: "11:34 AM" },
+  { sender: "HUNAR", text: "Just one thing can't be messy", time: "11:34 AM" },
+  { sender: "HUNAR", text: "Ohhhh", time: "11:34 AM" },
+  { sender: "HUNAR", text: "Aisa kya", time: "11:35 AM" },
+  { sender: "jordan", text: "ofccccc", time: "11:35 AM" },
+  { sender: "HUNAR", text: "Taking too long", time: "11:35 AM" },
+  { sender: "HUNAR", text: "How much the mess was", time: "11:35 AM" },
+  { sender: "jordan", text: "it was a lot", time: "11:35 AM" },
+  { sender: "HUNAR", text: "Ohhhhh", time: "11:36 AM" },
+  { sender: "jordan", text: "mess was stored for soo long no", time: "11:36 AM" },
+  { sender: "HUNAR", text: "Be careful na", time: "11:36 AM" },
+  { sender: "HUNAR", text: "Hmm completely got it", time: "11:36 AM" },
+  { sender: "jordan", text: "haan haan mera hi hai", time: "11:36 AM" },
+  { sender: "jordan", text: "neeh neeh i do it abhi ke liye", time: "11:36 AM" },
+  { sender: "HUNAR", text: "Need my help", time: "11:36 AM" },
+  { sender: "HUNAR", text: "Okiee as you say", time: "11:36 AM" },
+  { sender: "jordan", text: "yupieieie", time: "11:37 AM" },
+  { sender: "jordan", text: "you room was also messy no", time: "11:37 AM" },
+  { sender: "jordan", text: "saaf karne sote hai achi space leke", time: "11:37 AM" },
+  { sender: "HUNAR", text: "Not much", time: "11:37 AM" },
+  { sender: "jordan", text: "huh", time: "11:37 AM" },
+  { sender: "HUNAR", text: "Hehehehe", time: "11:37 AM" },
+  { sender: "HUNAR", text: "Pads vgera utha diye", time: "11:37 AM" },
+  { sender: "jordan", text: "🤭", time: "11:37 AM" },
+  { sender: "jordan", text: "ohh someone is on periods no", time: "11:38 AM" },
+  { sender: "HUNAR", text: "Yaahhhhh😑", time: "11:38 AM" },
+  { sender: "jordan", text: "koi naaaaa", time: "11:38 AM" },
+  { sender: "HUNAR", text: "Couldn't help it", time: "11:38 AM" },
+  { sender: "jordan", text: "neeh neeh no issues", time: "11:39 AM" },
+  { sender: "HUNAR", text: "I had na why would you", time: "11:39 AM" },
+  { sender: "jordan", text: "we can have it again after it all", time: "11:39 AM" },
+  { sender: "jordan", text: "sorry for the issues madam", time: "11:39 AM" },
+  { sender: "HUNAR", text: "Ya sure", time: "11:39 AM" },
+  { sender: "HUNAR", text: "It's okay", time: "11:39 AM" },
+  { sender: "jordan", text: "callyyyyyyyyy", time: "11:40 AM" },
+  { sender: "HUNAR", text: "Why not", time: "11:40 AM" },
+];
+
+const PHOTO = "data:image/png;base64,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";
+const container = document.getElementById('msgs');
+
+// Date separator
+const sep = document.createElement('div');
+sep.className = 'date-sep';
+sep.innerHTML = '<span>Mar 30, 2026</span>';
+container.appendChild(sep);
+
+rawMessages.forEach((msg, i) => {
+  const isYou = msg.sender === 'HUNAR';
+  const prevMsg = rawMessages[i - 1];
+  const isContinued = prevMsg && prevMsg.sender === msg.sender;
+
+  const row = document.createElement('div');
+  row.className = `msg-row ${isYou ? 'you' : 'them'}${isContinued ? ' continued' : ''}`;
+
+  if (!isYou) {
+    const av = document.createElement('div');
+    av.className = `small-avatar${isContinued ? ' hidden' : ''}`;
+    av.innerHTML = `<img src="${PHOTO}" />`;
+    row.appendChild(av);
+  }
+
+  const wrap = document.createElement('div');
+  wrap.className = 'bubble-wrap';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.textContent = msg.text;
+  wrap.appendChild(bubble);
+
+  row.appendChild(wrap);
+  container.appendChild(row);
+});
+
+// Scroll-in reveal — listens on window for iOS compatibility
+function revealVisible() {
+  const rows = container.querySelectorAll('.msg-row:not(.visible)');
+  rows.forEach(row => {
+    const rect = row.getBoundingClientRect();
+    if (rect.top < window.innerHeight + 40) {
+      row.classList.add('visible');
+    }
+  });
+}
+
+window.addEventListener('scroll', revealVisible, { passive: true });
+// Run once on load to reveal first messages
+setTimeout(revealVisible, 50);
+
+document.getElementById('inputField').addEventListener('keydown', e => {
+  if (e.key === 'Enter') sendMsg();
+});
+
+function sendMsg() {
+  const input = document.getElementById('inputField');
+  const text = input.value.trim();
+  if (!text) return;
+  const row = document.createElement('div');
+  row.className = 'msg-row you';
+  const wrap = document.createElement('div');
+  wrap.className = 'bubble-wrap';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.textContent = text;
+  wrap.appendChild(bubble);
+  row.appendChild(wrap);
+  container.appendChild(row);
+  // Immediately show new sent messages
+  requestAnimationFrame(() => row.classList.add('visible'));
+  input.value = '';
+  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
